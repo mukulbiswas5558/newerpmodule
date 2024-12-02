@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException
-from app.models.user_model import User
+from app.models.user_model import User, CreateUser, LoginUser
 from app.services.user_service import (
     create_user_service,
+    login_user_service,
     get_users_service,
     get_user_by_id_service,
     update_user_service,
@@ -11,10 +12,19 @@ from app.services.user_service import (
 router = APIRouter()
 
 
-@router.post("/", response_model=User)
-async def create_user(user: User):
-    return await create_user_service(user)
+# @router.post("/", response_model=User)
+# async def create_user(user: User):
+#     return await create_user_service(user)
 
+@router.post("/auth/register")
+async def create_user(user: CreateUser):
+
+    user.hash_password()
+    # Pass the user to the service to save
+    return await create_user_service(user)
+@router.post("/auth/login")
+async def login_user(user: LoginUser):
+    return await login_user_service(user)
 
 @router.get("/", response_model=list[User])
 async def get_users():
