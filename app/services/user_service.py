@@ -1,6 +1,6 @@
 from app.database import db
 from app.models.user_model import User, CreateUser, LoginUser
-from app.utils.auth import create_access_token, pwd_context
+from app.utils.auth import create_access_token, verify_password, get_password_hash
 from datetime import datetime
 
 
@@ -16,15 +16,15 @@ async def create_user_service(user: CreateUser):
        return {"message": "Username already exists. Please login."}
 
     # Hash the password using the method in CreateUser model
-    user.hash_password()
+    hashed_password = get_password_hash(user.password)
 
-    # Insert the new user into the database
+    # Insert the new user into the database with hashed password
     query = """
     INSERT INTO users (name, username, password, role) 
     VALUES ($1, $2, $3, $4) 
     RETURNING id, name, username, role;
     """
-    result = await db.fetch_one(query, user.name, user.username, user.password, user.role)
+    result = await db.fetch_one(query, user.name, user.username, hashed_password, user.role)
 
     # Create the access token after successful registration
     user_data = {
@@ -47,7 +47,7 @@ async def login_user_service(user: LoginUser):
         return {"message": "Invalid username or password"}
 
     # Verify the password
-    if not pwd_context.verify(user.password, db_user['password']):
+    if not verify_password(user.password, db_user['password']):
 
         return {"message": "Invalid username or password"}
 

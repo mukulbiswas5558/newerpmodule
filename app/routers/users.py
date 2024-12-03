@@ -19,7 +19,7 @@ router = APIRouter()
 @router.post("/auth/register")
 async def create_user(user: CreateUser):
 
-    user.hash_password()
+   
     # Pass the user to the service to save
     return await create_user_service(user)
 @router.post("/auth/login")
