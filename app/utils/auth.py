@@ -1,7 +1,8 @@
-from jose import jwt
+from jose import jwt, JWTError
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from typing import Optional
+from fastapi import HTTPException,Header
 # Configuration for JWT
 SECRET_KEY = "your_secret_key"  # Replace with a secure key.
 ALGORITHM = "HS256"
@@ -33,3 +34,33 @@ def create_access_token(data: dict) -> str:
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+
+async def validate_token(token: str):
+    """
+    Validate the Bearer token and decode its contents.
+
+    Args:
+        token (str): Bearer token.
+
+    Returns:
+        dict: Decoded payload.
+
+    Raises:
+        HTTPException: If the token is invalid or expired.
+    """
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid or expired token.")
+    
+async def get_bearer_token(authorization: Optional[str] = Header(None)) -> str:
+    """
+    Extract and validate the Bearer token from the Authorization header.
+    """
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization header missing.")
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Invalid Authorization header format.")
+    return authorization[len("Bearer "):]

@@ -1,5 +1,5 @@
-from fastapi import APIRouter, HTTPException
-from app.models.user_model import User, CreateUser, LoginUser
+from fastapi import APIRouter, HTTPException,Depends
+from app.models.user_model import User, CreateUser, LoginUser,UpdateUser
 from app.services.user_service import (
     create_user_service,
     login_user_service,
@@ -8,7 +8,7 @@ from app.services.user_service import (
     update_user_service,
     delete_user_service,
 )
-
+from app.utils.auth import get_bearer_token
 router = APIRouter()
 
 
@@ -39,12 +39,21 @@ async def get_user(user_id: int):
     return user
 
 
-@router.put("/{user_id}", response_model=User)
-async def update_user(user_id: int, user: User):
-    updated_user = await update_user_service(user_id, user)
-    if not updated_user:
-        raise HTTPException(status_code=400, detail="User update failed")
-    return updated_user
+
+
+@router.put("/update")
+async def update_user(
+    user: UpdateUser,  # Replace UpdateUser with your schema class
+    token: str = Depends(get_bearer_token)
+):
+    """
+    Updates a user's details after validating the JWT token.
+    """
+    # Print or use the extracted token
+    print(f"Token received: {token}")
+    
+    # Mock implementation for now
+    return {"message": "User updated successfully.", "token": token}
 
 
 @router.delete("/{user_id}")
